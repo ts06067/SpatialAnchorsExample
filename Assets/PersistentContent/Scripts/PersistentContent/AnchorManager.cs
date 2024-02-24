@@ -207,9 +207,11 @@ namespace PersistentContentExample
                     InputSubsystem.Extensions.MLHeadTracking.HeadTrackingStatus.Valid
                     && _currentLocalization.LocalizationStatus == MLSpace.Status.Localized)
                 {
-                    //UpdateAnchorsOnWorkerThread(QueryCenter.position, SearchRadius);
+                    UpdateAnchorsOnWorkerThread(QueryCenter.position, SearchRadius);
+                    /*
                     ThreadDispatcher.ScheduleWork(() =>
                         UpdateAnchorsOnWorkerThread(QueryCenter.position, SearchRadius));
+                    */
                 }
 
                 _searchNow = false;
