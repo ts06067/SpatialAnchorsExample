@@ -144,25 +144,35 @@ using UnityEngine.XR.MagicLeap;
          /// </summary>
          private void MenuStarted(InputAction.CallbackContext obj)
          {
-             Pose controllerPose = new Pose(_controllerActions.Position.ReadValue<Vector3>(),
-                 _controllerActions.Rotation.ReadValue<Quaternion>());
+            // raycast from the controller outward
+            if (IsPointerOverUI())
+                    return;
 
-             //Try creating an anchor 
-             var result =
-                 anchorManager.TryCreateAnchor(controllerPose, TimeSpan.FromDays(365), out MLAnchors.Anchor anchor);
-             if (result.IsOk)
-             {
-                 //If the anchor is successfully created,
-                 //bind a prefab name to the anchor and save it to local file storage.
-                 SimpleAnchorBinding savedAnchor = new SimpleAnchorBinding();
-                 savedAnchor.Bind(anchor, Prefab2.name);
-                 if (SimpleAnchorBinding.Storage.SaveToFile())
-                 {
-                     //Instantiate the prefab at the anchors location
-                     var persistentObject = Instantiate(Prefab2, controllerPose.position, controllerPose.rotation);
-                     _persistentObjectsById.Add(anchor.Id, persistentObject);
-                 }
-             }
+            Ray raycastRay = new Ray(_controllerActions.Position.ReadValue<Vector3>(),
+                               _controllerActions.Rotation.ReadValue<Quaternion>() * Vector3.forward);
+
+            // if the raycast hits a valid surface, create an anchor
+            if (Physics.Raycast(raycastRay, out RaycastHit hitInfo, 100, LayerMask.GetMask("Planes")))
+            {
+                Pose controllerPose = new Pose(hitInfo.point, Quaternion.LookRotation(-hitInfo.normal));
+
+                //Try creating an anchor 
+                var result =
+                    anchorManager.TryCreateAnchor(controllerPose, TimeSpan.FromDays(1), out MLAnchors.Anchor anchor);
+                if (result.IsOk)
+                {
+                    //If the anchor is successfully created,
+                    //bind a prefab name to the anchor and save it to local file storage.
+                    SimpleAnchorBinding savedAnchor = new SimpleAnchorBinding();
+                    savedAnchor.Bind(anchor, Prefab2.name);
+                    if (SimpleAnchorBinding.Storage.SaveToFile())
+                    {
+                        //Instantiate the prefab at the anchors location
+                        var persistentObject = Instantiate(Prefab2, controllerPose.position, controllerPose.rotation);
+                        _persistentObjectsById.Add(anchor.Id, persistentObject);
+                    }
+                }
+            }
          }
 
          private bool IsPointerOverUI()
@@ -186,24 +196,32 @@ using UnityEngine.XR.MagicLeap;
              if (IsPointerOverUI())
                  return;
 
-             Pose controllerPose = new Pose(_controllerActions.Position.ReadValue<Vector3>(),
-                 _controllerActions.Rotation.ReadValue<Quaternion>());
+            Ray raycastRay = new Ray(_controllerActions.Position.ReadValue<Vector3>(),
+                              _controllerActions.Rotation.ReadValue<Quaternion>() * Vector3.forward);
 
-             MLResult creationResult =
-                 anchorManager.TryCreateAnchor(controllerPose, TimeSpan.FromDays(365), out MLAnchors.Anchor anchor);
-             if (creationResult.IsOk)
-             {
-                 //If the anchor is successfully created,
-                 //bind a prefab name to the anchor and save it to local file storage.
-                 SimpleAnchorBinding savedAnchor = new SimpleAnchorBinding();
-                 if (savedAnchor.Bind(anchor, Prefab1.name))
-                 {
-                     //Instantiate the prefab at the anchors location
-                     var persistentObject = Instantiate(Prefab1, controllerPose.position, controllerPose.rotation);
-                     _persistentObjectsById.Add(anchor.Id, persistentObject);
-                 }
-             }
-         }
+            // if the raycast hits a valid surface, create an anchor
+            if (Physics.Raycast(raycastRay, out RaycastHit hitInfo, 100, LayerMask.GetMask("Planes")))
+            {
+                Pose controllerPose = new Pose(hitInfo.point, Quaternion.LookRotation(-hitInfo.normal));
+
+                //Try creating an anchor 
+                var result =
+                    anchorManager.TryCreateAnchor(controllerPose, TimeSpan.FromDays(1), out MLAnchors.Anchor anchor);
+                if (result.IsOk)
+                {
+                    //If the anchor is successfully created,
+                    //bind a prefab name to the anchor and save it to local file storage.
+                    SimpleAnchorBinding savedAnchor = new SimpleAnchorBinding();
+                    savedAnchor.Bind(anchor, Prefab1.name);
+                    if (SimpleAnchorBinding.Storage.SaveToFile())
+                    {
+                        //Instantiate the prefab at the anchors location
+                        var persistentObject = Instantiate(Prefab1, controllerPose.position, controllerPose.rotation);
+                        _persistentObjectsById.Add(anchor.Id, persistentObject);
+                    }
+                }
+            }
+        }
 
          /// <summary>
          /// Removes the Spatial Anchor nearest to the controller
